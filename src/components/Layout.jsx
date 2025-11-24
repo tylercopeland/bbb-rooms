@@ -145,10 +145,10 @@ export default function Layout({ children, breakoutRoomsContent, onToggleBreakou
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Toolbar */}
-        <header className="h-16 px-6 flex items-center justify-center flex-shrink-0 relative">
-          <div className="text-sm font-medium text-gray-700">
-            {selectedRoom ? selectedRoom.name : 'Meeting Actions'}
-          </div>
+            <header className="h-16 px-6 flex items-center justify-center flex-shrink-0 relative">
+              <div className="text-sm font-medium text-gray-700">
+                {selectedRoom ? selectedRoom.name : 'Main Session'}
+              </div>
           {selectedRoom && (
             <button
               onClick={onLeaveBreakoutRoom}
