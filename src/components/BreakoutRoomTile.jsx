@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DraggableAvatar from './DraggableAvatar';
+import TeacherAvatar from './TeacherAvatar';
 
 export default function BreakoutRoomTile({ 
   roomId,
@@ -9,6 +10,8 @@ export default function BreakoutRoomTile({
   onUserRemove,
   onClick,
   isSelected,
+  teacher,
+  showTeacher,
   isDraggingOver 
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -94,8 +97,16 @@ export default function BreakoutRoomTile({
       </div>
 
       {/* Participants */}
-      {participants.length > 0 ? (
+      {(participants.length > 0 || (showTeacher && teacher)) ? (
         <div className="flex flex-wrap gap-2">
+          {/* Teacher avatar - always first */}
+          {showTeacher && teacher && (
+            <TeacherAvatar 
+              userName={teacher.fullName} 
+              userInitial={teacher.initials}
+            />
+          )}
+          {/* Student participants */}
           {participants.map((participant, index) => {
             const fullName = typeof participant === 'string' ? participant : participant.fullName || participant.name;
             const initials = typeof participant === 'object' && participant.initials 

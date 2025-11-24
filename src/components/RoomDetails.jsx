@@ -11,7 +11,7 @@ function getInitials(fullName) {
   return fullName.charAt(0).toUpperCase() + (fullName.length > 1 ? fullName.charAt(1) : '');
 }
 
-export default function RoomDetails({ room }) {
+export default function RoomDetails({ room, teacher }) {
   const [currentPage, setCurrentPage] = useState(1);
   const participantsPerPage = 5;
 
@@ -19,15 +19,20 @@ export default function RoomDetails({ room }) {
     return null;
   }
 
-  const totalPages = Math.ceil(room.participants.length / participantsPerPage);
+  // Include teacher in the participant list if teacher exists
+  const allParticipants = teacher 
+    ? [{ fullName: teacher.fullName, initials: teacher.initials, isTeacher: true }, ...room.participants]
+    : room.participants;
+
+  const totalPages = Math.ceil(allParticipants.length / participantsPerPage);
   const startIndex = (currentPage - 1) * participantsPerPage;
   const endIndex = startIndex + participantsPerPage;
-  const currentParticipants = room.participants.slice(startIndex, endIndex);
+  const currentParticipants = allParticipants.slice(startIndex, endIndex);
 
   return (
     <div className="w-full flex flex-col items-center max-w-full overflow-hidden">
       {/* Video Grid */}
-      {room.participants.length > 0 && (
+      {allParticipants.length > 0 && (
         <>
           <div className="w-full grid gap-4 mb-8 mt-8 max-w-full" style={{ gridTemplateColumns: `repeat(${Math.min(currentParticipants.length, 5)}, minmax(0, 1fr))` }}>
             {currentParticipants.map((participant, index) => {
@@ -35,17 +40,24 @@ export default function RoomDetails({ room }) {
               const initials = typeof participant === 'object' && participant.initials 
                 ? participant.initials 
                 : getInitials(fullName);
+              const isTeacher = participant.isTeacher || false;
               
               return (
                 <div 
                   key={startIndex + index} 
                   className="aspect-video bg-gray-100 border border-gray-300 rounded-lg flex flex-col items-center justify-center relative pt-2 pb-2 min-w-0 overflow-hidden"
                 >
-                  <UserAvatar 
-                    userName={fullName}
-                    userInitial={initials}
-                    size="lg"
-                  />
+                  {isTeacher ? (
+                    <div className="w-16 h-16 rounded bg-blue-500 text-white flex items-center justify-center shadow-lg">
+                      <span className="text-base font-medium">{initials}</span>
+                    </div>
+                  ) : (
+                    <UserAvatar 
+                      userName={fullName}
+                      userInitial={initials}
+                      size="lg"
+                    />
+                  )}
                   <span className="mt-2 text-xs text-gray-600 font-medium text-center px-1 pb-2 truncate w-full">{fullName}</span>
                 </div>
               );

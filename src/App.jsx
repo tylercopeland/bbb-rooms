@@ -4,6 +4,7 @@ import BreakoutRoomsGrid from './components/BreakoutRoomsGrid';
 import Presentation from './components/Presentation';
 import AvailableUsers from './components/AvailableUsers';
 import RoomDetails from './components/RoomDetails';
+import UserAvatar from './components/UserAvatar';
 
 // Sample data with full names
 const initialRooms = [
@@ -52,6 +53,12 @@ const initialAvailableUsers = [
   { name: 'Kate Kelly', initial: 'KK' },
   { name: 'Liam Lee', initial: 'LL' }
 ];
+
+const teacher = {
+  name: 'Teacher',
+  fullName: 'Teacher Name',
+  initials: 'TN'
+};
 
 function App() {
   const [rooms, setRooms] = useState(initialRooms);
@@ -198,7 +205,7 @@ function App() {
           </svg>
         </button>
       </div>
-      <AvailableUsers users={availableUsers} onDrop={handleDropToAvailable} />
+          <AvailableUsers users={availableUsers} onDrop={handleDropToAvailable} teacher={selectedRoomId ? null : teacher} />
       <BreakoutRoomsGrid 
         rooms={rooms} 
         currentUser="You"
@@ -210,6 +217,7 @@ function App() {
         }}
         selectedRoomId={selectedRoomId}
         panelWidth={panelWidth}
+        teacher={teacher}
       />
     </div>
   ) : null;
@@ -223,7 +231,7 @@ function App() {
     >
       <div className="h-full flex items-center justify-center p-6 w-full overflow-hidden">
         {selectedRoom ? (
-          <RoomDetails room={selectedRoom} />
+          <RoomDetails room={selectedRoom} teacher={teacher} />
         ) : (
           <Presentation title="Presentation" />
         )}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import DraggableAvatar from './DraggableAvatar';
+import TeacherAvatar from './TeacherAvatar';
 
-export default function AvailableUsers({ users = [], onDrop }) {
+export default function AvailableUsers({ users = [], onDrop, teacher }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e) => {
@@ -36,6 +37,14 @@ export default function AvailableUsers({ users = [], onDrop }) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
+        {/* Teacher avatar - first item if teacher exists */}
+        {teacher && (
+          <TeacherAvatar 
+            userName={teacher.fullName} 
+            userInitial={teacher.initials}
+            size="md"
+          />
+        )}
         {users.map((user, index) => (
           <DraggableAvatar
             key={index}
