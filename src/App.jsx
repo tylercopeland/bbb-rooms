@@ -64,8 +64,9 @@ const teacher = {
 function App() {
   const [rooms, setRooms] = useState(initialRooms);
   const [availableUsers, setAvailableUsers] = useState(initialAvailableUsers);
-  const [showBreakoutPanel, setShowBreakoutPanel] = useState(true);
+  const [showBreakoutPanel, setShowBreakoutPanel] = useState(false);
   const [showUsersPanel, setShowUsersPanel] = useState(false);
+  const [showChatPanel, setShowChatPanel] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [activeTab, setActiveTab] = useState('presentation');
   const [isScreenshareEnabled, setIsScreenshareEnabled] = useState(false);
@@ -250,6 +251,28 @@ function App() {
     return users;
   };
 
+  const chatContent = (panelWidth) => (
+    <div className="h-full">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+        <h2 className="text-sm font-semibold text-gray-800">
+          Chat
+        </h2>
+        <button
+          onClick={() => setShowChatPanel(false)}
+          className="p-1 hover:bg-gray-100 rounded transition-colors"
+          title="Close panel"
+        >
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="text-sm text-gray-500">
+        Chat functionality coming soon...
+      </div>
+    </div>
+  );
+
   const usersContent = (panelWidth) => showUsersPanel ? (
     <div className="h-full">
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
@@ -328,17 +351,34 @@ function App() {
       breakoutRoomsContent={breakoutRoomsContent}
       showBreakoutPanel={showBreakoutPanel}
       onToggleBreakoutPanel={() => {
-        setShowBreakoutPanel(!showBreakoutPanel);
-        if (!showBreakoutPanel) {
-          setShowUsersPanel(false); // Close users when opening huddles
+        const newValue = !showBreakoutPanel;
+        setShowBreakoutPanel(newValue);
+        if (newValue) {
+          // When opening huddles, close other panels
+          setShowUsersPanel(false);
+          setShowChatPanel(false);
         }
       }}
       usersContent={usersContent}
       showUsersPanel={showUsersPanel}
       onToggleUsersPanel={() => {
-        setShowUsersPanel(!showUsersPanel);
-        if (!showUsersPanel) {
-          setShowBreakoutPanel(false); // Close huddles when opening users
+        const newValue = !showUsersPanel;
+        setShowUsersPanel(newValue);
+        if (newValue) {
+          // When opening users, close other panels
+          setShowBreakoutPanel(false);
+          setShowChatPanel(false);
+        }
+      }}
+      chatContent={chatContent}
+      showChatPanel={showChatPanel}
+      onToggleChatPanel={() => {
+        const newValue = !showChatPanel;
+        setShowChatPanel(newValue);
+        if (newValue) {
+          // When opening chat, close other panels
+          setShowBreakoutPanel(false);
+          setShowUsersPanel(false);
         }
       }}
       selectedRoom={selectedRoom}

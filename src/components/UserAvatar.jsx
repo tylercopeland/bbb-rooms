@@ -23,7 +23,7 @@ export default function UserAvatar({ userName, userInitial, size = 'md' }) {
       className={`
         ${sizeClasses} rounded-full 
         bg-blue-500 text-white flex items-center justify-center
-        shadow-lg flex-shrink-0
+        flex-shrink-0
       `}
     >
       <span className="font-medium">{initials}</span>

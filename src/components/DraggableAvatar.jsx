@@ -34,7 +34,7 @@ export default function DraggableAvatar({ userName = 'You', userInitial, fixed =
   const baseClasses = `
     ${sizeClasses} rounded-full 
     bg-blue-500 text-white flex items-center justify-center
-    cursor-move shadow-lg transition-all
+    cursor-move transition-all
     ${isDragging ? 'opacity-50 scale-90' : 'hover:scale-110'}
   `;
 

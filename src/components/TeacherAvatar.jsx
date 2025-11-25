@@ -27,7 +27,7 @@ export default function TeacherAvatar({ userName = 'Teacher', userInitial = 'T',
       className={`
         ${sizeClasses} rounded
         bg-blue-500 text-white flex items-center justify-center
-        cursor-move shadow-lg transition-all
+        cursor-move transition-all
         ${isDragging ? 'opacity-50 scale-90' : 'hover:scale-110'}
       `}
       title={`Teacher: ${userName}`}

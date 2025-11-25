@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import MeetingControls from './MeetingControls';
 
-export default function Layout({ children, breakoutRoomsContent, showBreakoutPanel, onToggleBreakoutPanel, usersContent, showUsersPanel, onToggleUsersPanel, selectedRoom, onLeaveBreakoutRoom, isScreenshareEnabled, setIsScreenshareEnabled }) {
+export default function Layout({ children, breakoutRoomsContent, showBreakoutPanel, onToggleBreakoutPanel, usersContent, showUsersPanel, onToggleUsersPanel, chatContent, showChatPanel, onToggleChatPanel, selectedRoom, onLeaveBreakoutRoom, isScreenshareEnabled, setIsScreenshareEnabled }) {
   const [sidebarWidth, setSidebarWidth] = useState(64); // Thin sidebar with icons
   const [breakoutPanelWidth, setBreakoutPanelWidth] = useState(320); // 80 * 4 = 320px (w-80)
   const [usersPanelWidth, setUsersPanelWidth] = useState(320);
@@ -83,6 +83,8 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const isAnyPanelOpen = showBreakoutPanel || showUsersPanel || showChatPanel;
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar */}
@@ -138,8 +140,24 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
           
           {/* Chat Icon */}
           <div className="relative group">
-            <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button
+              onClick={onToggleChatPanel}
+              className={`p-2 rounded transition-colors ${
+                showChatPanel
+                  ? 'bg-blue-100 hover:bg-blue-200'
+                  : 'hover:bg-gray-100'
+              }`}
+            >
+              <svg
+                className={`w-6 h-6 ${
+                  showChatPanel
+                    ? 'text-blue-600'
+                    : 'text-gray-600'
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </button>
@@ -227,14 +245,32 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
         </div>
       </aside>
 
+      {/* Sidebar Resize Handle */}
+      {isAnyPanelOpen && (
+        <div
+          onMouseDown={handleSidebarResizeStart}
+          className="w-0.5 bg-gray-200 hover:bg-blue-400 cursor-col-resize flex-shrink-0 transition-colors"
+        />
+      )}
+
+      {/* Chat Panel */}
+      {showChatPanel && chatContent && (
+        <>
+          {/* Chat Panel */}
+          <aside
+            className="bg-white border-r border-gray-200 flex flex-col flex-shrink-0"
+            style={{ width: '320px' }}
+          >
+            <div className="flex-1 overflow-auto p-6">
+              {typeof chatContent === 'function' ? chatContent(320) : chatContent}
+            </div>
+          </aside>
+        </>
+      )}
+
       {/* Users Panel */}
       {showUsersPanel && usersContent && (
         <>
-          {/* Sidebar Resize Handle */}
-          <div
-            onMouseDown={handleSidebarResizeStart}
-            className="w-0.5 bg-gray-200 hover:bg-blue-400 cursor-col-resize flex-shrink-0 transition-colors"
-          />
 
           {/* Users Panel */}
           <aside 
@@ -336,7 +372,7 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
         </header>
 
         {/* Center Content Area */}
-        <main className={`flex-1 ${(showBreakoutPanel || showUsersPanel) ? 'overflow-auto p-6' : 'overflow-hidden pt-6 pr-6 pb-6 pl-0'}`}>
+        <main className={`flex-1 ${isAnyPanelOpen ? 'overflow-auto p-6' : 'overflow-hidden pt-6 pr-6 pb-6 pl-0'}`}>
           {children}
         </main>
 

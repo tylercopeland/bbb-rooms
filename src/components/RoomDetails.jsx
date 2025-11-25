@@ -70,7 +70,7 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
                   className="h-32 bg-gray-100 border border-gray-300 rounded-lg flex flex-col items-center justify-start relative pt-3 pb-3 min-w-[160px] overflow-hidden"
                 >
                   {isTeacher ? (
-                    <div className="w-16 h-16 rounded bg-blue-500 text-white flex items-center justify-center shadow-lg flex-shrink-0">
+                        <div className="w-16 h-16 rounded bg-blue-500 text-white flex items-center justify-center flex-shrink-0">
                       <span className="text-base font-medium">{initials}</span>
                     </div>
                   ) : (
