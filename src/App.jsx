@@ -5,6 +5,7 @@ import Presentation from './components/Presentation';
 import AvailableUsers from './components/AvailableUsers';
 import RoomDetails from './components/RoomDetails';
 import UserAvatar from './components/UserAvatar';
+import ParticipantsGrid from './components/ParticipantsGrid';
 
 // Sample data with full names
 const initialRooms = [
@@ -66,7 +67,7 @@ function App() {
   const [availableUsers, setAvailableUsers] = useState(initialAvailableUsers);
   const [showBreakoutPanel, setShowBreakoutPanel] = useState(false);
   const [showUsersPanel, setShowUsersPanel] = useState(false);
-  const [showChatPanel, setShowChatPanel] = useState(false);
+  const [showChatPanel, setShowChatPanel] = useState(true);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [activeTab, setActiveTab] = useState('presentation');
   const [isScreenshareEnabled, setIsScreenshareEnabled] = useState(false);
@@ -252,8 +253,8 @@ function App() {
   };
 
   const chatContent = (panelWidth) => (
-    <div className="h-full">
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 flex-shrink-0">
         <h2 className="text-sm font-semibold text-gray-800">
           Chat
         </h2>
@@ -267,8 +268,31 @@ function App() {
           </svg>
         </button>
       </div>
-      <div className="text-sm text-gray-500">
-        Chat functionality coming soon...
+      
+      {/* Messages Area - Placeholder for now */}
+      <div className="flex-1 overflow-y-auto mb-4">
+        <div className="text-sm text-gray-500 text-center mt-8">
+          No messages yet
+        </div>
+      </div>
+
+      {/* Input Area */}
+      <div className="border-t border-gray-200 pt-4 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Type a message..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          />
+          <button
+            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0"
+            title="Send message"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -411,7 +435,12 @@ function App() {
             teacherRoomId={teacherRoomId}
           />
         ) : (
-          <Presentation title="Presentation" />
+          <div className="w-full h-full flex flex-col items-center min-h-0">
+            <ParticipantsGrid users={getAllUsers()} teacher={null} />
+            <div className="flex-1 min-h-0 w-full">
+              <Presentation title="Presentation" />
+            </div>
+          </div>
         )}
       </div>
     </Layout>
