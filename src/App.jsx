@@ -70,7 +70,7 @@ function App() {
   const [showChatPanel, setShowChatPanel] = useState(true);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [activeTab, setActiveTab] = useState('presentation');
-  const [isScreenshareEnabled, setIsScreenshareEnabled] = useState(false);
+  const [roomScreenshare, setRoomScreenshare] = useState({}); // Store screenshare state per room: { roomId: boolean }
   const [roomNotes, setRoomNotes] = useState({}); // Store notes per room: { roomId: notes }
   const [teacherRoomId, setTeacherRoomId] = useState(null); // Track which room the teacher is in
 
@@ -82,10 +82,15 @@ function App() {
     const availableUser = availableUsers.find(u => u.name === userName);
     
     if (isTeacher) {
-      // Teacher is being moved to the target room
-      setTeacherRoomId(roomId);
-      // Also select the room when teacher is dragged to it
-      setSelectedRoomId(roomId);
+        // Teacher is being moved to the target room
+        const isDifferentRoom = teacherRoomId !== roomId;
+        setTeacherRoomId(roomId);
+        // Also select the room when teacher is dragged to it
+        setSelectedRoomId(roomId);
+        // Reset active tab when switching to a different room
+        if (isDifferentRoom) {
+          setActiveTab('presentation');
+        }
     } else if (availableUser) {
       // Remove from available users
       setAvailableUsers(prev => prev.filter(u => u.name !== userName));
@@ -354,12 +359,17 @@ function App() {
         currentUser="You"
         onUserDrop={handleUserDrop}
         onUserRemove={handleUserRemoveFromRoom}
-        onRoomClick={(roomId) => {
-          // Move teacher to the clicked room
-          setTeacherRoomId(roomId);
-          // Toggle: if clicking the same room, deselect it
-          setSelectedRoomId(prev => prev === roomId ? null : roomId);
-        }}
+            onRoomClick={(roomId) => {
+              // Move teacher to the clicked room
+              setTeacherRoomId(roomId);
+              // Toggle: if clicking the same room, deselect it
+              const isSameRoom = selectedRoomId === roomId;
+              setSelectedRoomId(isSameRoom ? null : roomId);
+              // Reset active tab when switching to a different room
+              if (!isSameRoom && roomId !== null) {
+                setActiveTab('presentation');
+              }
+            }}
         selectedRoomId={selectedRoomId}
         panelWidth={panelWidth}
         teacher={teacher}
@@ -411,25 +421,42 @@ function App() {
         setTeacherRoomId(null);
         // Deselect the room
         setSelectedRoomId(null);
+        // Reset active tab when leaving room
+        setActiveTab('presentation');
       }}
-      isScreenshareEnabled={isScreenshareEnabled}
-      setIsScreenshareEnabled={setIsScreenshareEnabled}
+      isScreenshareEnabled={selectedRoomId ? (roomScreenshare[selectedRoomId] || false) : false}
+      setIsScreenshareEnabled={(enabled) => {
+        if (selectedRoomId) {
+          setRoomScreenshare(prev => ({
+            ...prev,
+            [selectedRoomId]: enabled
+          }));
+          // If enabling screenshare while in a huddle, switch to screenshare tab
+          if (enabled) {
+            setActiveTab('screenshare');
+          } else if (activeTab === 'screenshare') {
+            // If disabling screenshare and we're on screenshare tab, switch to presentation
+            setActiveTab('presentation');
+          }
+        }
+      }}
     >
-      <div className={`h-full flex justify-center w-full min-h-0 ${selectedRoom ? 'overflow-hidden items-start' : 'overflow-hidden items-center'}`}>
+      <div className={`h-full flex justify-center w-full min-h-0 min-w-0 ${selectedRoom ? 'overflow-hidden items-start' : 'overflow-hidden items-center'}`}>
         {selectedRoom ? (
           <RoomDetails 
             room={selectedRoom} 
             teacher={teacher} 
             activeTab={activeTab} 
             onTabChange={(tab) => {
+              const currentRoomScreenshare = selectedRoomId ? (roomScreenshare[selectedRoomId] || false) : false;
               // If screenshare is disabled and user tries to switch to screenshare, switch to presentation instead
-              if (tab === 'screenshare' && !isScreenshareEnabled) {
+              if (tab === 'screenshare' && !currentRoomScreenshare) {
                 setActiveTab('presentation');
               } else {
                 setActiveTab(tab);
               }
             }}
-            isScreenshareEnabled={isScreenshareEnabled}
+            isScreenshareEnabled={selectedRoomId ? (roomScreenshare[selectedRoomId] || false) : false}
             sharedNotes={roomNotes[selectedRoomId] || ''}
             onSharedNotesChange={(notes) => {
               setRoomNotes(prev => ({

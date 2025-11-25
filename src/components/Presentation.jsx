@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function Presentation({ title = 'Presentation' }) {
   return (
-    <div className="w-full h-full flex items-center justify-center p-6">
-      <div className="w-full h-full flex items-center justify-center min-h-0">
+    <div className="w-full h-full flex items-center justify-center p-6 min-w-0 min-h-0 overflow-hidden">
+      <div className="w-full h-full flex items-center justify-center min-h-0 min-w-0 max-w-full max-h-full">
         {/* 16:9 Aspect Ratio Container - Scales to fit available space */}
         <div 
           className="bg-gray-100 border border-gray-300 rounded-lg overflow-hidden flex flex-col items-center justify-center"
@@ -13,7 +13,8 @@ export default function Presentation({ title = 'Presentation' }) {
             maxWidth: '100%',
             maxHeight: '100%',
             height: 'auto',
-            minHeight: 0
+            minHeight: 0,
+            minWidth: 0
           }}
         >
           {/* Placeholder content */}

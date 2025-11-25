@@ -2,28 +2,17 @@ import React, { useState, useRef } from 'react';
 import MeetingControls from './MeetingControls';
 
 export default function Layout({ children, breakoutRoomsContent, showBreakoutPanel, onToggleBreakoutPanel, usersContent, showUsersPanel, onToggleUsersPanel, chatContent, showChatPanel, onToggleChatPanel, selectedRoom, onLeaveBreakoutRoom, isScreenshareEnabled, setIsScreenshareEnabled }) {
-  const [sidebarWidth, setSidebarWidth] = useState(64); // Thin sidebar with icons
   const [breakoutPanelWidth, setBreakoutPanelWidth] = useState(320); // 80 * 4 = 320px (w-80)
   const [usersPanelWidth, setUsersPanelWidth] = useState(320);
   
-  const isResizingSidebar = useRef(false);
   const isResizingBreakout = useRef(false);
   const isResizingUsers = useRef(false);
   const breakoutResizeStartX = useRef(0);
   const breakoutResizeStartWidth = useRef(0);
   const usersResizeStartX = useRef(0);
   const usersResizeStartWidth = useRef(0);
-  const sidebarResizeStartX = useRef(0);
-  const sidebarResizeStartWidth = useRef(0);
 
   const handleMouseMove = (e) => {
-      if (isResizingSidebar.current) {
-        const deltaX = e.clientX - sidebarResizeStartX.current;
-        const newWidth = sidebarResizeStartWidth.current + deltaX;
-        if (newWidth >= 64 && newWidth <= 200) {
-          setSidebarWidth(newWidth);
-        }
-      }
     if (isResizingBreakout.current) {
       const deltaX = e.clientX - breakoutResizeStartX.current;
       const newWidth = breakoutResizeStartWidth.current + deltaX;
@@ -41,24 +30,12 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
   };
 
   const handleMouseUp = () => {
-    isResizingSidebar.current = false;
     isResizingBreakout.current = false;
     isResizingUsers.current = false;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  };
-
-  const handleSidebarResizeStart = (e) => {
-    e.preventDefault();
-    isResizingSidebar.current = true;
-    sidebarResizeStartX.current = e.clientX;
-    sidebarResizeStartWidth.current = sidebarWidth;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleBreakoutResizeStart = (e) => {
@@ -89,8 +66,7 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
     <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar */}
       <aside 
-        className="bg-white border-r border-gray-200 flex flex-col items-center py-4 flex-shrink-0 h-full"
-        style={{ width: `${sidebarWidth}px` }}
+        className="bg-white border-r border-gray-200 flex flex-col items-center py-4 flex-shrink-0 h-full w-16"
       >
         {/* Logo Placeholder */}
         <div className="w-8 h-8 mb-2 bg-gray-200 rounded flex items-center justify-center">
@@ -245,14 +221,6 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
         </div>
       </aside>
 
-      {/* Sidebar Resize Handle */}
-      {isAnyPanelOpen && (
-        <div
-          onMouseDown={handleSidebarResizeStart}
-          className="w-0.5 bg-gray-200 hover:bg-blue-400 cursor-col-resize flex-shrink-0 transition-colors"
-        />
-      )}
-
       {/* Chat Panel */}
       {showChatPanel && chatContent && (
         <>
@@ -293,14 +261,6 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
       {/* Huddles Panel */}
       {showBreakoutPanel && breakoutRoomsContent && (
         <>
-          {/* Sidebar Resize Handle (only if users panel not open) */}
-          {!showUsersPanel && (
-            <div
-              onMouseDown={handleSidebarResizeStart}
-              className="w-0.5 bg-gray-200 hover:bg-blue-400 cursor-col-resize flex-shrink-0 transition-colors"
-            />
-          )}
-
           {/* Huddles Panel */}
           <aside 
             className="bg-white border-r border-gray-200 flex flex-col flex-shrink-0"

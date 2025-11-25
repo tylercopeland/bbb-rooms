@@ -151,7 +151,7 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
 
         {/* Tab Content */}
         {activeTab === 'presentation' && (
-          <div className="w-full flex-1 min-h-0 flex items-center justify-center">
+          <div className="w-full flex-1 min-h-0 flex items-center justify-center min-w-0 overflow-hidden">
             <Presentation title={`${room.name} Presentation`} />
           </div>
         )}

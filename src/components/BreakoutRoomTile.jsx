@@ -77,7 +77,7 @@ export default function BreakoutRoomTile({
           {/* Activity Graph Line */}
           <div className="flex-shrink-0 relative group">
             {hasActivity ? (
-              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-green-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h3l2-4h2l2 4" />
                 <circle cx="18" cy="8" r="1.5" fill="currentColor" />
               </svg>
