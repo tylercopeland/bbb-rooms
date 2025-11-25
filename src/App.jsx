@@ -6,6 +6,7 @@ import AvailableUsers from './components/AvailableUsers';
 import RoomDetails from './components/RoomDetails';
 import UserAvatar from './components/UserAvatar';
 import ParticipantsGrid from './components/ParticipantsGrid';
+import HuddleCreationModal from './components/HuddleCreationModal';
 
 // Sample data with full names
 const initialRooms = [
@@ -73,6 +74,8 @@ function App() {
   const [roomScreenshare, setRoomScreenshare] = useState({}); // Store screenshare state per room: { roomId: boolean }
   const [roomNotes, setRoomNotes] = useState({}); // Store notes per room: { roomId: notes }
   const [teacherRoomId, setTeacherRoomId] = useState(null); // Track which room the teacher is in
+  const [showHuddleCreationModal, setShowHuddleCreationModal] = useState(false);
+  const [huddlesCreated, setHuddlesCreated] = useState(false);
 
   const handleUserDrop = (roomId, userName) => {
     // Check if the dragged user is the teacher
@@ -218,6 +221,117 @@ function App() {
 
   const selectedRoom = rooms.find(r => r.id === selectedRoomId);
 
+  // Get all users excluding teacher (for huddle creation)
+  const getAllUsersExcludingTeacher = () => {
+    const users = [];
+    
+    // Add available users
+    availableUsers.forEach(user => {
+      users.push({
+        fullName: user.name,
+        initials: user.initial || getInitials(user.name)
+      });
+    });
+    
+    // Add users from all rooms
+    rooms.forEach(room => {
+      room.participants.forEach(participant => {
+        const fullName = typeof participant === 'string' ? participant : participant.fullName || participant.name;
+        const initials = typeof participant === 'object' && participant.initials 
+          ? participant.initials 
+          : getInitials(fullName);
+        
+        // Check if user already exists
+        if (!users.some(u => u.fullName === fullName)) {
+          users.push({ fullName, initials });
+        }
+      });
+    });
+    
+    return users;
+  };
+
+  // Handle Individual huddle creation - one huddle per user
+  const handleCreateIndividualHuddles = () => {
+    const allUsers = getAllUsersExcludingTeacher();
+    const newRooms = allUsers.map((user, index) => ({
+      id: index + 1,
+      name: `Room ${String.fromCharCode(65 + index)}`, // A, B, C, etc.
+      participants: [user],
+      hasActivity: true
+    }));
+    
+    setRooms(newRooms);
+    setAvailableUsers([]); // Clear available users as they're all in huddles now
+    setShowHuddleCreationModal(false);
+    setHuddlesCreated(true);
+  };
+
+  // Handle Group huddle creation - use existing rooms
+  const handleCreateGroupHuddles = () => {
+    // Collect all users (excluding teacher) from rooms and available users
+    const allUsersExcludingTeacher = getAllUsersExcludingTeacher();
+    
+    // Convert to available users format
+    const availableUsersList = allUsersExcludingTeacher.map(user => ({
+      name: user.fullName,
+      initial: user.initials
+    }));
+    
+    // Clear all rooms of participants (keep room structure)
+    const emptyRooms = rooms.map(room => ({
+      ...room,
+      participants: [],
+      hasActivity: false
+    }));
+    
+    // Set all users as available (excluding teacher)
+    setAvailableUsers(availableUsersList);
+    setRooms(emptyRooms);
+    setShowHuddleCreationModal(false);
+    setHuddlesCreated(true);
+  };
+
+  // Handle random assignment of available users to rooms
+  const handleRandomAssign = () => {
+    if (availableUsers.length === 0 || rooms.length === 0) {
+      return; // Nothing to assign or no rooms available
+    }
+
+    // Filter out teacher from available users (just in case)
+    const usersToAssign = availableUsers.filter(user => user.name !== teacher.fullName);
+    
+    if (usersToAssign.length === 0) {
+      return; // No users to assign
+    }
+
+    // Create a shuffled copy of users to assign
+    const shuffledUsers = [...usersToAssign].sort(() => Math.random() - 0.5);
+    
+    // Distribute users evenly across rooms
+    const updatedRooms = rooms.map((room, index) => {
+      const usersPerRoom = Math.floor(shuffledUsers.length / rooms.length);
+      const startIndex = index * usersPerRoom;
+      const endIndex = index === rooms.length - 1 
+        ? shuffledUsers.length 
+        : startIndex + usersPerRoom;
+      
+      const assignedUsers = shuffledUsers.slice(startIndex, endIndex).map(user => ({
+        fullName: user.name,
+        initials: user.initial || getInitials(user.name)
+      }));
+
+      return {
+        ...room,
+        participants: [...room.participants, ...assignedUsers],
+        hasActivity: assignedUsers.length > 0 ? true : room.hasActivity
+      };
+    });
+
+    setRooms(updatedRooms);
+    setAvailableUsers([]); // Clear available users as they're all assigned
+  };
+
   // Get all users (available + in rooms + teacher)
   const getAllUsers = () => {
     const users = [];
@@ -337,24 +451,69 @@ function App() {
     </div>
   ) : null;
 
+  // Handle ending huddles - reset everything and show creation modal
+  const handleEndHuddles = () => {
+    // Reset rooms to initial state
+    setRooms(initialRooms);
+    // Reset available users to initial state
+    setAvailableUsers(initialAvailableUsers);
+    // Clear teacher's room selection
+    setTeacherRoomId(null);
+    setSelectedRoomId(null);
+    // Clear room notes and screenshare states
+    setRoomNotes({});
+    setRoomScreenshare({});
+    // Reset active tab
+    setActiveTab('presentation');
+    // Mark huddles as not created and show modal
+    setHuddlesCreated(false);
+    setShowHuddleCreationModal(true);
+  };
+
   const breakoutRoomsContent = (panelWidth) => showBreakoutPanel ? (
     <div className="h-full">
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
         <h2 className="text-sm font-semibold text-gray-800">
           Huddles
         </h2>
-        <button
-          onClick={() => setShowBreakoutPanel(false)}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
-          title="Close panel"
-        >
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* End Huddles Button - only show when huddles have been created */}
+          {huddlesCreated && (
+            <button
+              onClick={handleEndHuddles}
+              className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors"
+              title="End Huddles"
+            >
+              End Huddles
+            </button>
+          )}
+          <button
+            onClick={() => setShowBreakoutPanel(false)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            title="Close panel"
+          >
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
-          <AvailableUsers users={availableUsers} onDrop={handleDropToAvailable} teacher={teacherRoomId === null ? teacher : null} />
-      <BreakoutRoomsGrid 
+      
+      {/* Show huddle creation modal if huddles haven't been created yet */}
+      {showHuddleCreationModal && !huddlesCreated ? (
+        <HuddleCreationModal
+          onSelectIndividual={handleCreateIndividualHuddles}
+          onSelectGroup={handleCreateGroupHuddles}
+        />
+      ) : (
+        <>
+          <AvailableUsers 
+            users={availableUsers} 
+            onDrop={handleDropToAvailable} 
+            teacher={teacherRoomId === null ? teacher : null}
+            onRandomAssign={handleRandomAssign}
+          />
+          <BreakoutRoomsGrid 
         rooms={rooms} 
         currentUser="You"
         onUserDrop={handleUserDrop}
@@ -376,11 +535,14 @@ function App() {
         activeTab={selectedRoomId ? activeTab : null}
         roomNotes={roomNotes}
         teacherRoomId={teacherRoomId}
-      />
+          />
+        </>
+      )}
     </div>
   ) : null;
 
   return (
+    <>
     <Layout 
       breakoutRoomsContent={breakoutRoomsContent}
       showBreakoutPanel={showBreakoutPanel}
@@ -391,6 +553,10 @@ function App() {
           // When opening huddles, close other panels
           setShowUsersPanel(false);
           setShowChatPanel(false);
+          // Show modal if huddles haven't been created yet
+          if (!huddlesCreated) {
+            setShowHuddleCreationModal(true);
+          }
         }
       }}
       usersContent={usersContent}
@@ -472,10 +638,11 @@ function App() {
             <div className="flex-1 min-h-0 w-full">
               <Presentation title="Presentation" />
             </div>
-          </div>
+      </div>
         )}
       </div>
     </Layout>
+    </>
   );
 }
 

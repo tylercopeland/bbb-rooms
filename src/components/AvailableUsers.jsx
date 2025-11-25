@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DraggableAvatar from './DraggableAvatar';
 import TeacherAvatar from './TeacherAvatar';
 
-export default function AvailableUsers({ users = [], onDrop, teacher }) {
+export default function AvailableUsers({ users = [], onDrop, teacher, onRandomAssign }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e) => {
@@ -26,9 +26,20 @@ export default function AvailableUsers({ users = [], onDrop, teacher }) {
 
   return (
     <div className="mb-6">
-      <h3 className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">
-        Available Users
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          Available Users
+        </h3>
+        {onRandomAssign && users.length > 0 && (
+          <button
+            onClick={onRandomAssign}
+            className="text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+            title="Randomly assign users to rooms"
+          >
+            Random assign
+          </button>
+        )}
+      </div>
       <div 
         className={`flex flex-wrap gap-2 p-2 rounded transition-colors ${
           isDragOver ? 'bg-blue-50 border-2 border-blue-300 border-dashed' : ''
