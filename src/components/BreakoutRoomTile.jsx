@@ -71,18 +71,18 @@ export default function BreakoutRoomTile({
       {/* Room Name */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <h3 className="text-xs font-medium text-gray-700 truncate">
+          <h3 className="text-sm font-medium text-gray-700 truncate">
             {roomName.replace('Room ', '')}
           </h3>
           {/* Activity Graph Line */}
           <div className="flex-shrink-0 relative group">
             {hasActivity ? (
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h3l2-4h2l2 4" />
                 <circle cx="18" cy="8" r="1.5" fill="currentColor" />
               </svg>
             ) : (
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
               </svg>
             )}
