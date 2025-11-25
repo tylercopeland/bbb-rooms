@@ -11,7 +11,7 @@ function getInitials(fullName) {
   return fullName.charAt(0).toUpperCase() + (fullName.length > 1 ? fullName.charAt(1) : '');
 }
 
-export default function RoomDetails({ room, teacher, activeTab: propActiveTab, onTabChange, isScreenshareEnabled = false, sharedNotes: propSharedNotes, onSharedNotesChange }) {
+export default function RoomDetails({ room, teacher, activeTab: propActiveTab, onTabChange, isScreenshareEnabled = false, sharedNotes: propSharedNotes, onSharedNotesChange, teacherRoomId }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [internalActiveTab, setInternalActiveTab] = useState('presentation');
   const [internalSharedNotes, setInternalSharedNotes] = useState('');
@@ -33,7 +33,7 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
   }
 
   // Include teacher in the participant list if teacher exists
-  const allParticipants = teacher 
+  const allParticipants = (teacher && teacherRoomId === room.id)
     ? [{ fullName: teacher.fullName, initials: teacher.initials, isTeacher: true }, ...room.participants]
     : room.participants;
 
@@ -43,11 +43,11 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
   const currentParticipants = allParticipants.slice(startIndex, endIndex);
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="w-full h-full flex flex-col items-center min-h-0">
       {/* Video Grid */}
       {allParticipants.length > 0 && (
         <>
-          <div className={`w-full flex ${currentParticipants.length <= 3 ? 'justify-center' : ''} mb-8 mt-8`}>
+          <div className={`w-full flex flex-shrink-0 ${currentParticipants.length <= 3 ? 'justify-center' : ''} mb-4 mt-4`}>
             <div 
               className="grid gap-4"
               style={{ 
@@ -87,9 +87,9 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
             </div>
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mb-6">
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mb-4 flex-shrink-0">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
@@ -113,7 +113,7 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
       )}
       
       {/* Tabs */}
-      <div className="w-full max-w-4xl mt-4 mb-3">
+      <div className="w-full max-w-4xl mt-2 mb-2 flex-shrink-0">
         <div className="flex border-b border-gray-300">
           <button
             onClick={() => setActiveTab('presentation')}
@@ -151,7 +151,9 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
 
         {/* Tab Content */}
         {activeTab === 'presentation' && (
-          <Presentation title={`${room.name} Presentation`} />
+          <div className="w-full flex-1 min-h-0 flex items-center justify-center">
+            <Presentation title={`${room.name} Presentation`} />
+          </div>
         )}
         {activeTab === 'screenshare' && (
           <div className="w-full flex items-center justify-center">
@@ -182,13 +184,18 @@ export default function RoomDetails({ room, teacher, activeTab: propActiveTab, o
           </div>
         )}
         {activeTab === 'shared-notes' && (
-          <div className="w-full flex items-center justify-center">
-            <div className="w-full max-w-4xl">
+          <div className="w-full flex-1 min-h-0 flex items-center justify-center p-6">
+            <div className="w-full max-w-4xl h-full flex items-center">
               <textarea
                 value={sharedNotes}
                 onChange={(e) => setSharedNotes(e.target.value)}
                 placeholder="Write your notes here..."
-                className="w-full h-96 p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                style={{
+                  aspectRatio: '16/9',
+                  height: 'auto',
+                  maxHeight: '100%'
+                }}
               />
             </div>
           </div>

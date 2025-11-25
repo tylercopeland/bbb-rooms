@@ -286,7 +286,7 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Toolbar */}
-            <header className={`h-16 flex items-center justify-between flex-shrink-0 relative ${(showBreakoutPanel || showUsersPanel) ? 'px-6' : 'pl-0 pr-6'}`}>
+            <header className={`h-16 flex items-center justify-between flex-shrink-0 relative ${(showBreakoutPanel || showUsersPanel) ? 'px-6' : 'pl-6 pr-6'}`}>
               <div className="text-sm font-medium text-gray-700">
                 {selectedRoom ? selectedRoom.name : 'Main Session'}
               </div>
@@ -336,7 +336,7 @@ export default function Layout({ children, breakoutRoomsContent, showBreakoutPan
         </header>
 
         {/* Center Content Area */}
-        <main className={`flex-1 overflow-auto ${(showBreakoutPanel || showUsersPanel) ? 'p-6' : 'pt-6 pr-6 pb-6 pl-0'}`}>
+        <main className={`flex-1 ${(showBreakoutPanel || showUsersPanel) ? 'overflow-auto p-6' : 'overflow-hidden pt-6 pr-6 pb-6 pl-0'}`}>
           {children}
         </main>
 

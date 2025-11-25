@@ -70,12 +70,21 @@ function App() {
   const [activeTab, setActiveTab] = useState('presentation');
   const [isScreenshareEnabled, setIsScreenshareEnabled] = useState(false);
   const [roomNotes, setRoomNotes] = useState({}); // Store notes per room: { roomId: notes }
+  const [teacherRoomId, setTeacherRoomId] = useState(null); // Track which room the teacher is in
 
   const handleUserDrop = (roomId, userName) => {
+    // Check if the dragged user is the teacher
+    const isTeacher = userName === teacher.fullName;
+    
     // Check if user is in available users
     const availableUser = availableUsers.find(u => u.name === userName);
     
-    if (availableUser) {
+    if (isTeacher) {
+      // Teacher is being moved to the target room
+      setTeacherRoomId(roomId);
+      // Also select the room when teacher is dragged to it
+      setSelectedRoomId(roomId);
+    } else if (availableUser) {
       // Remove from available users
       setAvailableUsers(prev => prev.filter(u => u.name !== userName));
       
@@ -177,19 +186,27 @@ function App() {
   };
 
   const handleDropToAvailable = (userName) => {
-    // Remove user from all rooms
-    setRooms(prevRooms =>
-      prevRooms.map(room => ({
-        ...room,
-        participants: room.participants.filter(p => {
-          const pName = typeof p === 'string' ? p : p.fullName || p.name;
-          return pName !== userName;
-        })
-      }))
-    );
+    // Check if the dropped user is the teacher
+    const isTeacher = userName === teacher.fullName;
+    
+    if (isTeacher) {
+      // Move teacher back to available (no room)
+      setTeacherRoomId(null);
+    } else {
+      // Remove user from all rooms
+      setRooms(prevRooms =>
+        prevRooms.map(room => ({
+          ...room,
+          participants: room.participants.filter(p => {
+            const pName = typeof p === 'string' ? p : p.fullName || p.name;
+            return pName !== userName;
+          })
+        }))
+      );
 
-    // Add user back to available users
-    handleUserRemoveFromRoom(userName);
+      // Add user back to available users
+      handleUserRemoveFromRoom(userName);
+    }
   };
 
   const selectedRoom = rooms.find(r => r.id === selectedRoomId);
@@ -284,13 +301,15 @@ function App() {
           </svg>
         </button>
       </div>
-          <AvailableUsers users={availableUsers} onDrop={handleDropToAvailable} teacher={selectedRoomId ? null : teacher} />
+          <AvailableUsers users={availableUsers} onDrop={handleDropToAvailable} teacher={teacherRoomId === null ? teacher : null} />
       <BreakoutRoomsGrid 
         rooms={rooms} 
         currentUser="You"
         onUserDrop={handleUserDrop}
         onUserRemove={handleUserRemoveFromRoom}
         onRoomClick={(roomId) => {
+          // Move teacher to the clicked room
+          setTeacherRoomId(roomId);
           // Toggle: if clicking the same room, deselect it
           setSelectedRoomId(prev => prev === roomId ? null : roomId);
         }}
@@ -299,6 +318,7 @@ function App() {
         teacher={teacher}
         activeTab={selectedRoomId ? activeTab : null}
         roomNotes={roomNotes}
+        teacherRoomId={teacherRoomId}
       />
     </div>
   ) : null;
@@ -326,7 +346,7 @@ function App() {
       isScreenshareEnabled={isScreenshareEnabled}
       setIsScreenshareEnabled={setIsScreenshareEnabled}
     >
-      <div className="h-full flex items-start justify-center w-full overflow-y-auto">
+      <div className={`h-full flex justify-center w-full min-h-0 ${selectedRoom ? 'overflow-hidden items-start' : 'overflow-hidden items-center'}`}>
         {selectedRoom ? (
           <RoomDetails 
             room={selectedRoom} 
@@ -348,6 +368,7 @@ function App() {
                 [selectedRoomId]: notes
               }));
             }}
+            teacherRoomId={teacherRoomId}
           />
         ) : (
           <Presentation title="Presentation" />

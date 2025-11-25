@@ -39,8 +39,9 @@ export default function BreakoutRoomTile({
   };
 
   const handleClick = (e) => {
-    // Don't trigger click if clicking on drag/drop area or avatars
-    if (e.target.closest('[draggable="true"]')) {
+    // Don't trigger click if clicking directly on draggable avatars
+    // But allow clicks on the card itself even if avatars are present
+    if (e.target.closest('[draggable="true"]') && e.target.closest('[draggable="true"]') === e.target) {
       return;
     }
     if (onClick) {

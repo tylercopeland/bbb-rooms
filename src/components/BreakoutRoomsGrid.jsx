@@ -1,7 +1,7 @@
 import React from 'react';
 import BreakoutRoomTile from './BreakoutRoomTile';
 
-export default function BreakoutRoomsGrid({ rooms, currentUser, onUserDrop, onUserRemove, onRoomClick, selectedRoomId, panelWidth = 320, teacher, activeTab, roomNotes }) {
+export default function BreakoutRoomsGrid({ rooms, currentUser, onUserDrop, onUserRemove, onRoomClick, selectedRoomId, panelWidth = 320, teacher, activeTab, roomNotes, teacherRoomId }) {
   // Show 2 columns when panel width is 400px or larger
   const showTwoColumns = panelWidth >= 400;
   
@@ -18,7 +18,7 @@ export default function BreakoutRoomsGrid({ rooms, currentUser, onUserDrop, onUs
           onClick={() => onRoomClick && onRoomClick(room.id)}
           isSelected={selectedRoomId === room.id}
           teacher={teacher}
-          showTeacher={selectedRoomId === room.id}
+          showTeacher={teacherRoomId === room.id}
           activeTab={selectedRoomId === room.id ? activeTab : null}
           hasActivity={room.hasActivity !== false}
           sharedNotes={selectedRoomId === room.id && activeTab === 'shared-notes' ? (roomNotes && roomNotes[room.id] || '') : null}
