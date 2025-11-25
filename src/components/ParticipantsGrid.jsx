@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import UserAvatar from './UserAvatar';
 
 function getInitials(fullName) {
@@ -13,12 +13,55 @@ function getInitials(fullName) {
 export default function ParticipantsGrid({ users = [], teacher = null }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isHovering, setIsHovering] = useState(false);
-  const participantsPerPage = 5;
+  const [participantsPerPage, setParticipantsPerPage] = useState(5);
+  const containerRef = useRef(null);
 
   // Combine teacher and users, with teacher first
   const allParticipants = teacher
     ? [{ fullName: teacher.fullName, initials: teacher.initials, isTeacher: true }, ...users]
     : users;
+
+  // Calculate how many avatars can fit based on container width
+  useEffect(() => {
+    const calculateParticipantsPerPage = () => {
+      if (!containerRef.current) return;
+      
+      const containerWidth = containerRef.current.offsetWidth;
+      const avatarMinWidth = 160; // min-w-[160px]
+      const gap = 16; // gap-4 = 16px
+      const padding = 96; // px-12 = 48px on each side = 96px total
+      const availableWidth = containerWidth - padding;
+      
+      // Calculate how many avatars can fit
+      // Formula: (availableWidth + gap) / (avatarMinWidth + gap)
+      const maxAvatars = Math.floor((availableWidth + gap) / (avatarMinWidth + gap));
+      
+      // Ensure at least 1 avatar per page, and cap at reasonable maximum
+      const calculatedPerPage = Math.max(1, Math.min(maxAvatars, 10));
+      
+      setParticipantsPerPage(calculatedPerPage);
+      
+      // Reset to page 1 if current page would be out of bounds
+      const totalPages = Math.ceil(allParticipants.length / calculatedPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(1);
+      }
+    };
+
+    calculateParticipantsPerPage();
+    
+    const resizeObserver = new ResizeObserver(calculateParticipantsPerPage);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    window.addEventListener('resize', calculateParticipantsPerPage);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', calculateParticipantsPerPage);
+    };
+  }, [allParticipants.length, currentPage]);
 
   const totalPages = Math.ceil(allParticipants.length / participantsPerPage);
   const startIndex = (currentPage - 1) * participantsPerPage;
@@ -31,14 +74,15 @@ export default function ParticipantsGrid({ users = [], teacher = null }) {
 
   return (
     <div 
-      className="w-full flex flex-col items-center mb-4 flex-shrink-0 relative"
+      ref={containerRef}
+      className="w-full flex flex-col items-center mb-4 flex-shrink-0 relative px-12"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       {/* Video Grid with Floating Arrows */}
       <div className="w-full flex items-center justify-center relative overflow-visible">
         {/* Webcam Row */}
-        <div className={`flex gap-4 justify-center relative ${currentParticipants.length <= 3 ? 'justify-center' : ''}`}>
+        <div className={`flex gap-4 justify-center relative w-full max-w-full ${currentParticipants.length <= 3 ? 'justify-center' : ''}`}>
           {/* Left Arrow - Positioned on top of leftmost webcam tile, only show on hover and when on page 2 or later */}
           {totalPages > 1 && currentPage > 1 && isHovering && (
             <button

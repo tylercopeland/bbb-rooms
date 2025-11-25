@@ -406,7 +406,12 @@ function App() {
         }
       }}
       selectedRoom={selectedRoom}
-      onLeaveBreakoutRoom={() => setSelectedRoomId(null)}
+      onLeaveBreakoutRoom={() => {
+        // Remove teacher from the current room
+        setTeacherRoomId(null);
+        // Deselect the room
+        setSelectedRoomId(null);
+      }}
       isScreenshareEnabled={isScreenshareEnabled}
       setIsScreenshareEnabled={setIsScreenshareEnabled}
     >
