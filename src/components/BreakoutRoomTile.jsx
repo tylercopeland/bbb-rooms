@@ -12,7 +12,10 @@ export default function BreakoutRoomTile({
   isSelected,
   teacher,
   showTeacher,
-  isDraggingOver 
+  isDraggingOver,
+  activeTab = 'presentation',
+  hasActivity = true,
+  sharedNotes = null
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -66,9 +69,27 @@ export default function BreakoutRoomTile({
     >
       {/* Room Name */}
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-medium text-gray-700 truncate flex-1">
-          {roomName.replace('Room ', '')}
-        </h3>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h3 className="text-xs font-medium text-gray-700 truncate">
+            {roomName.replace('Room ', '')}
+          </h3>
+          {/* Activity Graph Line */}
+          <div className="flex-shrink-0 relative group">
+            {hasActivity ? (
+              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h3l2-4h2l2 4" />
+                <circle cx="18" cy="8" r="1.5" fill="currentColor" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+              </svg>
+            )}
+            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+              {hasActivity ? 'Active huddle' : 'No activity'}
+            </div>
+          </div>
+        </div>
         {isSelected && (
           <svg className="w-4 h-4 text-blue-600 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -76,23 +97,67 @@ export default function BreakoutRoomTile({
         )}
       </div>
 
-      {/* Presentation Thumbnail */}
-      <div className="mb-3 w-full aspect-video bg-gray-100 border border-gray-200 rounded overflow-hidden flex items-center justify-center">
-        <div className="text-center text-gray-400">
-          <svg 
-            className="w-12 h-12 mx-auto mb-2" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" 
-            />
-          </svg>
-          <p className="text-xs">Presentation</p>
+      {/* Thumbnail - Updates based on active tab */}
+      <div className={`mb-3 w-full aspect-video rounded overflow-hidden flex items-center justify-center ${
+        activeTab === 'shared-notes' 
+          ? 'bg-white border border-gray-300' 
+          : 'bg-gray-100 border border-gray-200'
+      }`}>
+        <div className={`${activeTab === 'shared-notes' ? 'w-full h-full' : 'text-center text-gray-400'}`}>
+          {activeTab === 'screenshare' ? (
+            <>
+              <svg 
+                className="w-12 h-12 mx-auto mb-2" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
+                />
+              </svg>
+              <p className="text-xs">Screenshare</p>
+            </>
+          ) : activeTab === 'shared-notes' ? (
+            <>
+              {sharedNotes ? (
+                <div className="w-full h-full p-3 overflow-hidden">
+                  <p className="text-xs text-gray-700 text-left whitespace-pre-wrap break-words" style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 4,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}>
+                    {sharedNotes}
+                  </p>
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <p className="text-xs text-gray-400">No notes</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <svg 
+                className="w-12 h-12 mx-auto mb-2" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                />
+              </svg>
+              <p className="text-xs">Presentation</p>
+            </>
+          )}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UserAvatar from './UserAvatar';
 import Presentation from './Presentation';
 
@@ -11,9 +11,22 @@ function getInitials(fullName) {
   return fullName.charAt(0).toUpperCase() + (fullName.length > 1 ? fullName.charAt(1) : '');
 }
 
-export default function RoomDetails({ room, teacher }) {
+export default function RoomDetails({ room, teacher, activeTab: propActiveTab, onTabChange, isScreenshareEnabled = false, sharedNotes: propSharedNotes, onSharedNotesChange }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [internalActiveTab, setInternalActiveTab] = useState('presentation');
+  const [internalSharedNotes, setInternalSharedNotes] = useState('');
+  const sharedNotes = propSharedNotes !== undefined ? propSharedNotes : internalSharedNotes;
+  const setSharedNotes = onSharedNotesChange || setInternalSharedNotes;
+  const activeTab = propActiveTab !== undefined ? propActiveTab : internalActiveTab;
+  const setActiveTab = onTabChange || setInternalActiveTab;
   const participantsPerPage = 5;
+
+  // If screenshare is disabled and we're on the screenshare tab, switch to presentation
+  useEffect(() => {
+    if (!isScreenshareEnabled && activeTab === 'screenshare') {
+      setActiveTab('presentation');
+    }
+  }, [isScreenshareEnabled, activeTab, setActiveTab]);
 
   if (!room) {
     return null;
@@ -30,11 +43,20 @@ export default function RoomDetails({ room, teacher }) {
   const currentParticipants = allParticipants.slice(startIndex, endIndex);
 
   return (
-    <div className="w-full flex flex-col items-center max-w-full overflow-hidden">
+    <div className="w-full flex flex-col items-center">
       {/* Video Grid */}
       {allParticipants.length > 0 && (
         <>
-          <div className="w-full grid gap-4 mb-8 mt-8 max-w-full" style={{ gridTemplateColumns: `repeat(${Math.min(currentParticipants.length, 5)}, minmax(0, 1fr))` }}>
+          <div className={`w-full flex ${currentParticipants.length <= 3 ? 'justify-center' : ''} mb-8 mt-8`}>
+            <div 
+              className="grid gap-4"
+              style={{ 
+                gridTemplateColumns: currentParticipants.length <= 3
+                  ? `repeat(${currentParticipants.length}, minmax(160px, 1fr))`
+                  : 'repeat(5, minmax(160px, 1fr))',
+                width: currentParticipants.length <= 3 ? 'auto' : '100%'
+              }}
+            >
             {currentParticipants.map((participant, index) => {
               const fullName = typeof participant === 'string' ? participant : participant.fullName || participant.name;
               const initials = typeof participant === 'object' && participant.initials 
@@ -45,10 +67,10 @@ export default function RoomDetails({ room, teacher }) {
               return (
                 <div 
                   key={startIndex + index} 
-                  className="aspect-video bg-gray-100 border border-gray-300 rounded-lg flex flex-col items-center justify-center relative pt-2 pb-2 min-w-0 overflow-hidden"
+                  className="h-32 bg-gray-100 border border-gray-300 rounded-lg flex flex-col items-center justify-start relative pt-3 pb-3 min-w-[160px] overflow-hidden"
                 >
                   {isTeacher ? (
-                    <div className="w-16 h-16 rounded bg-blue-500 text-white flex items-center justify-center shadow-lg">
+                    <div className="w-16 h-16 rounded bg-blue-500 text-white flex items-center justify-center shadow-lg flex-shrink-0">
                       <span className="text-base font-medium">{initials}</span>
                     </div>
                   ) : (
@@ -58,10 +80,11 @@ export default function RoomDetails({ room, teacher }) {
                       size="lg"
                     />
                   )}
-                  <span className="mt-2 text-xs text-gray-600 font-medium text-center px-1 pb-2 truncate w-full">{fullName}</span>
+                  <span className="mt-3 text-xs text-gray-600 font-medium text-center px-2 break-words w-full leading-tight">{fullName}</span>
                 </div>
               );
             })}
+            </div>
           </div>
 
           {/* Pagination */}
@@ -89,8 +112,88 @@ export default function RoomDetails({ room, teacher }) {
         </>
       )}
       
-      {/* Presentation */}
-      <Presentation title={`${room.name} Presentation`} />
+      {/* Tabs */}
+      <div className="w-full max-w-4xl mt-4 mb-3">
+        <div className="flex border-b border-gray-300">
+          <button
+            onClick={() => setActiveTab('presentation')}
+            className={`px-4 py-2 text-xs font-medium transition-colors ${
+              activeTab === 'presentation'
+                ? 'text-blue-600 border-b-2 border-blue-600 -mb-px'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Presentation
+          </button>
+          <button
+            onClick={() => setActiveTab('shared-notes')}
+            className={`px-4 py-2 text-xs font-medium transition-colors ${
+              activeTab === 'shared-notes'
+                ? 'text-blue-600 border-b-2 border-blue-600 -mb-px'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Shared Notes
+          </button>
+          {isScreenshareEnabled && (
+            <button
+              onClick={() => setActiveTab('screenshare')}
+              className={`px-4 py-2 text-xs font-medium transition-colors ${
+                activeTab === 'screenshare'
+                  ? 'text-blue-600 border-b-2 border-blue-600 -mb-px'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Screenshare
+            </button>
+          )}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'presentation' && (
+          <Presentation title={`${room.name} Presentation`} />
+        )}
+        {activeTab === 'screenshare' && (
+          <div className="w-full flex items-center justify-center">
+            <div className="w-full max-w-4xl">
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <div className="absolute inset-0 bg-gray-100 border border-gray-300 rounded-lg overflow-hidden flex flex-col items-center justify-center">
+                  <div className="text-center text-gray-400">
+                    <svg
+                      className="w-24 h-24 mx-auto mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      {room.name} Screenshare
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeTab === 'shared-notes' && (
+          <div className="w-full flex items-center justify-center">
+            <div className="w-full max-w-4xl">
+              <textarea
+                value={sharedNotes}
+                onChange={(e) => setSharedNotes(e.target.value)}
+                placeholder="Write your notes here..."
+                className="w-full h-96 p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -35,7 +35,8 @@ const initialRooms = [
   {
     id: 4,
     name: 'Room Delta',
-    participants: []
+    participants: [],
+    hasActivity: false // Example: No activity
   },
   {
     id: 5,
@@ -64,7 +65,11 @@ function App() {
   const [rooms, setRooms] = useState(initialRooms);
   const [availableUsers, setAvailableUsers] = useState(initialAvailableUsers);
   const [showBreakoutPanel, setShowBreakoutPanel] = useState(true);
+  const [showUsersPanel, setShowUsersPanel] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const [activeTab, setActiveTab] = useState('presentation');
+  const [isScreenshareEnabled, setIsScreenshareEnabled] = useState(false);
+  const [roomNotes, setRoomNotes] = useState({}); // Store notes per room: { roomId: notes }
 
   const handleUserDrop = (roomId, userName) => {
     // Check if user is in available users
@@ -189,11 +194,85 @@ function App() {
 
   const selectedRoom = rooms.find(r => r.id === selectedRoomId);
 
+  // Get all users (available + in rooms + teacher)
+  const getAllUsers = () => {
+    const users = [];
+    
+    // Add teacher
+    if (teacher) {
+      users.push({
+        fullName: teacher.fullName,
+        initials: teacher.initials,
+        isTeacher: true
+      });
+    }
+    
+    // Add available users
+    availableUsers.forEach(user => {
+      users.push({
+        fullName: user.name,
+        initials: user.initial || getInitials(user.name)
+      });
+    });
+    
+    // Add users from all rooms
+    rooms.forEach(room => {
+      room.participants.forEach(participant => {
+        const fullName = typeof participant === 'string' ? participant : participant.fullName || participant.name;
+        const initials = typeof participant === 'object' && participant.initials 
+          ? participant.initials 
+          : getInitials(fullName);
+        
+        // Check if user already exists
+        if (!users.some(u => u.fullName === fullName)) {
+          users.push({ fullName, initials });
+        }
+      });
+    });
+    
+    return users;
+  };
+
+  const usersContent = (panelWidth) => showUsersPanel ? (
+    <div className="h-full">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+        <h2 className="text-sm font-semibold text-gray-800">
+          Users
+        </h2>
+        <button
+          onClick={() => setShowUsersPanel(false)}
+          className="p-1 hover:bg-gray-100 rounded transition-colors"
+          title="Close panel"
+        >
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="space-y-2">
+        {getAllUsers().map((user, index) => (
+          <div key={index} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded transition-colors">
+            {user.isTeacher ? (
+              <div className="w-10 h-10 rounded bg-blue-500 text-white flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-medium">{user.initials}</span>
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-medium">{user.initials}</span>
+              </div>
+            )}
+            <span className="text-sm text-gray-700 font-medium">{user.fullName}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
   const breakoutRoomsContent = (panelWidth) => showBreakoutPanel ? (
     <div className="h-full">
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
         <h2 className="text-sm font-semibold text-gray-800">
-          Breakout Rooms
+          Huddles
         </h2>
         <button
           onClick={() => setShowBreakoutPanel(false)}
@@ -218,6 +297,8 @@ function App() {
         selectedRoomId={selectedRoomId}
         panelWidth={panelWidth}
         teacher={teacher}
+        activeTab={selectedRoomId ? activeTab : null}
+        roomNotes={roomNotes}
       />
     </div>
   ) : null;
@@ -225,13 +306,49 @@ function App() {
   return (
     <Layout 
       breakoutRoomsContent={breakoutRoomsContent}
-      onToggleBreakoutPanel={() => setShowBreakoutPanel(!showBreakoutPanel)}
+      showBreakoutPanel={showBreakoutPanel}
+      onToggleBreakoutPanel={() => {
+        setShowBreakoutPanel(!showBreakoutPanel);
+        if (!showBreakoutPanel) {
+          setShowUsersPanel(false); // Close users when opening huddles
+        }
+      }}
+      usersContent={usersContent}
+      showUsersPanel={showUsersPanel}
+      onToggleUsersPanel={() => {
+        setShowUsersPanel(!showUsersPanel);
+        if (!showUsersPanel) {
+          setShowBreakoutPanel(false); // Close huddles when opening users
+        }
+      }}
       selectedRoom={selectedRoom}
       onLeaveBreakoutRoom={() => setSelectedRoomId(null)}
+      isScreenshareEnabled={isScreenshareEnabled}
+      setIsScreenshareEnabled={setIsScreenshareEnabled}
     >
-      <div className="h-full flex items-center justify-center p-6 w-full overflow-hidden">
+      <div className="h-full flex items-start justify-center w-full overflow-y-auto">
         {selectedRoom ? (
-          <RoomDetails room={selectedRoom} teacher={teacher} />
+          <RoomDetails 
+            room={selectedRoom} 
+            teacher={teacher} 
+            activeTab={activeTab} 
+            onTabChange={(tab) => {
+              // If screenshare is disabled and user tries to switch to screenshare, switch to presentation instead
+              if (tab === 'screenshare' && !isScreenshareEnabled) {
+                setActiveTab('presentation');
+              } else {
+                setActiveTab(tab);
+              }
+            }}
+            isScreenshareEnabled={isScreenshareEnabled}
+            sharedNotes={roomNotes[selectedRoomId] || ''}
+            onSharedNotesChange={(notes) => {
+              setRoomNotes(prev => ({
+                ...prev,
+                [selectedRoomId]: notes
+              }));
+            }}
+          />
         ) : (
           <Presentation title="Presentation" />
         )}
